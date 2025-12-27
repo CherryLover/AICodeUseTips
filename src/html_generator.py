@@ -80,16 +80,29 @@ class HTMLGenerator:
 '''
         for article in articles:
             date = article.get("date") or article.get("created_time") or ""
-            has_image_html = '<span class="has-image">含图片</span>' if article.get("has_image") else ""
+            cover_image = article.get("cover_image", "")
+            preview_text = article.get("preview_text", "")
+
+            # 封面图 HTML
+            if cover_image:
+                cover_html = f'<div class="article-cover"><img src="{cover_image}" alt="{article["title"]}" loading="lazy"></div>'
+            else:
+                cover_html = ''
+
+            # 预览文本 HTML
+            preview_html = f'<p class="article-preview">{preview_text}</p>' if preview_text else ''
 
             html += f'''
     <article class="article-item" data-date="{date}">
-        <a href="{article['id']}.html">
-            <h2 class="article-title">{article['title']}</h2>
-        </a>
-        <div class="article-meta">
-            <time>{article['date_display']}</time>
-            {has_image_html}
+        {cover_html}
+        <div class="article-content-wrap">
+            <a href="{article['id']}.html">
+                <h2 class="article-title">{article['title']}</h2>
+            </a>
+            {preview_html}
+            <div class="article-meta">
+                <time>{article['date_display']}</time>
+            </div>
         </div>
     </article>
 '''
@@ -122,11 +135,13 @@ class HTMLGenerator:
     .article-list {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 24px;
     }
 
     .article-item {
-        padding-bottom: 20px;
+        display: flex;
+        gap: 16px;
+        padding-bottom: 24px;
         border-bottom: 1px solid var(--border-color);
     }
 
@@ -134,22 +149,58 @@ class HTMLGenerator:
         border-bottom: none;
     }
 
+    .article-cover {
+        flex-shrink: 0;
+        width: 160px;
+        height: 100px;
+        overflow: hidden;
+        border-radius: 6px;
+    }
+
+    .article-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .article-content-wrap {
+        flex: 1;
+        min-width: 0;
+    }
+
     .article-title {
         font-size: 1.2em;
         margin: 0 0 8px 0;
+        line-height: 1.4;
+    }
+
+    .article-preview {
+        color: var(--text-secondary);
+        font-size: 0.9em;
+        margin: 0 0 8px 0;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
     .article-meta {
         color: var(--text-secondary);
-        font-size: 0.9em;
+        font-size: 0.85em;
         display: flex;
         gap: 12px;
     }
 
-    .has-image {
-        background: var(--callout-bg);
-        padding: 2px 8px;
-        border-radius: 3px;
+    @media (max-width: 600px) {
+        .article-item {
+            flex-direction: column;
+        }
+
+        .article-cover {
+            width: 100%;
+            height: 180px;
+        }
     }
 </style>
 

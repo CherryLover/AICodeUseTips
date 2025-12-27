@@ -9,10 +9,52 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config import OUTPUT_DIR, IMAGES_DIR
-from src.notion_client import NotionClient, extract_page_info
+from src.notion_client import NotionClient, extract_page_info, parse_rich_text
 from src.image_handler import ImageHandler
 from src.block_parser import BlockParser
 from src.html_generator import HTMLGenerator
+
+
+def extract_preview(blocks: list, image_handler: ImageHandler, page_id: str) -> dict:
+    """从块中提取预览信息（摘要文本和封面图）"""
+    preview_text = ""
+    cover_image = None
+
+    for block in blocks:
+        block_type = block.get("type")
+
+        # 提取封面图（第一张图片）
+        if not cover_image and block_type == "image":
+            image_data = block.get("image", {})
+            image_type = image_data.get("type")
+            if image_type == "file":
+                url = image_data.get("file", {}).get("url")
+            elif image_type == "external":
+                url = image_data.get("external", {}).get("url")
+            else:
+                url = None
+            if url:
+                cover_image = image_handler.process_image(url, page_id, 0)
+
+        # 提取预览文本（从段落中获取）
+        if len(preview_text) < 100 and block_type == "paragraph":
+            rich_text = block.get("paragraph", {}).get("rich_text", [])
+            text = parse_rich_text(rich_text)
+            if text:
+                preview_text += text + " "
+
+        # 如果都获取到了，提前退出
+        if cover_image and len(preview_text) >= 100:
+            break
+
+    # 截断预览文本
+    if len(preview_text) > 120:
+        preview_text = preview_text[:120].strip() + "..."
+
+    return {
+        "preview_text": preview_text.strip(),
+        "cover_image": cover_image
+    }
 
 
 def clean_output():
@@ -59,6 +101,11 @@ def build():
         # 获取页面内容
         blocks = notion.get_page_blocks(page_info["id"])
         print(f"  - 找到 {len(blocks)} 个内容块")
+
+        # 提取预览信息（封面图和摘要）
+        preview = extract_preview(blocks, image_handler, page_info["id"])
+        page_info["preview_text"] = preview["preview_text"]
+        page_info["cover_image"] = preview["cover_image"]
 
         # 解析块为 HTML
         content_html = block_parser.parse_blocks(blocks, page_info["id"])
