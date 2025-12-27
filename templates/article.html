@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="article">
+    <header class="article-header">
+        <h1>{{ article.title }}</h1>
+        <div class="article-meta">
+            <time>{{ article.date_display }}</time>
+        </div>
+    </header>
+
+    <div class="article-content">
+        {{ article.content }}
+    </div>
+
+    <nav class="article-nav">
+        <a href="index.html">&larr; 返回列表</a>
+    </nav>
+</article>
+
+<style>
+    .article-header {
+        margin-bottom: 32px;
+    }
+
+    .article-header h1 {
+        margin-top: 0;
+        font-size: 1.8em;
+    }
+
+    .article-meta {
+        color: var(--text-secondary);
+    }
+
+    .article-content {
+        margin-bottom: 40px;
+    }
+
+    .article-nav {
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+</style>
+{% endblock %}

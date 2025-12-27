@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="sort-controls">
+    <span>排序：</span>
+    <button class="sort-btn active" data-sort="desc">最新优先</button>
+    <button class="sort-btn" data-sort="asc">最早优先</button>
+</div>
+
+<div class="article-list" id="article-list">
+    {% for article in articles %}
+    <article class="article-item" data-date="{{ article.date or article.created_time }}">
+        <a href="{{ article.id }}.html">
+            <h2 class="article-title">{{ article.title }}</h2>
+        </a>
+        <div class="article-meta">
+            <time>{{ article.date_display }}</time>
+            {% if article.has_image %}
+            <span class="has-image">含图片</span>
+            {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+</div>
+
+<style>
+    .sort-controls {
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sort-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-color);
+        color: var(--text-color);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+
+    .sort-btn.active {
+        background: var(--text-color);
+        color: var(--bg-color);
+    }
+
+    .article-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .article-item {
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .article-item:last-child {
+        border-bottom: none;
+    }
+
+    .article-title {
+        font-size: 1.2em;
+        margin: 0 0 8px 0;
+    }
+
+    .article-meta {
+        color: var(--text-secondary);
+        font-size: 0.9em;
+        display: flex;
+        gap: 12px;
+    }
+
+    .has-image {
+        background: var(--callout-bg);
+        padding: 2px 8px;
+        border-radius: 3px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const list = document.getElementById('article-list');
+        const buttons = document.querySelectorAll('.sort-btn');
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                buttons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const sort = this.dataset.sort;
+                const items = Array.from(list.querySelectorAll('.article-item'));
+
+                items.sort((a, b) => {
+                    const dateA = new Date(a.dataset.date);
+                    const dateB = new Date(b.dataset.date);
+                    return sort === 'desc' ? dateB - dateA : dateA - dateB;
+                });
+
+                items.forEach(item => list.appendChild(item));
+            });
+        });
+    });
+</script>
+{% endblock %}
